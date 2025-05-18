@@ -1,0 +1,11 @@
+__pycache__/
+.env/
+*.log
+*.DS_Store
+*.pkl
+*.index
+raw_data/
+clean_text/
+chunks/
+logs/*.index
+logs/*.pkl
