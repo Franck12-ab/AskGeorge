@@ -93,3 +93,22 @@ try:
         download_pdfs_from_page(full_url, "Program Page")
 except Exception as e:
     print(f"❌ Failed to scrape /programs | {e}")
+
+# === SECTION 5: Direct Co-op / FAQ / Continuing Ed Pages ===
+faq_pages = [
+    # Main Co-op and FAQ pages
+    # ("https://www.georgebrown.ca/programs/co-op-education", "Co-op"),
+    ("https://www.georgebrown.ca/ask-george-brown", "FAQ"),
+    
+    # Continuing education content
+    ("https://coned.georgebrown.ca/courses-and-programs", "ConEd Courses"),
+    ("https://coned.georgebrown.ca/registration-information", "ConEd Registration"),
+    ("https://coned.georgebrown.ca/policies", "ConEd Policies"),
+    ("https://coned.georgebrown.ca/student-resources", "ConEd Resources"),
+    ("https://coned.georgebrown.ca/about-us", "ConEd About"),
+    ("https://coned.georgebrown.ca/contact-us", "ConEd Contact")
+]
+
+for url, category in faq_pages:
+    print(f"\n📂 Visiting Direct Page: {url} [Category: {category}]")
+    download_pdfs_from_page(url, category)

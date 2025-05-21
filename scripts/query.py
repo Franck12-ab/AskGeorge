@@ -19,9 +19,11 @@ def query(question, top_k=5):
     for rank, idx in enumerate(indices[0]):
         result = meta[idx]
         print(f"[{rank+1}] 📄 {result['source_file']} | 📁 {result['category']}")
-        with open(f"chunks/{result['source_file'].replace('.pdf', f'_chunk_{result['chunk_id']}.txt')}", "r") as f:
+        chunk_path = f"chunks/{result['source_file'].replace('.pdf', f'_chunk_{result['chunk_id']}.txt')}"
+        with open(chunk_path, "r") as f:
             text = f.read().strip()
-            print(text[:500].replace("\n", " ") + "...\n")  # preview
+            print(text[:500].replace("\n", " ") + "...\n")
+
 
 # Example
 if __name__ == "__main__":
