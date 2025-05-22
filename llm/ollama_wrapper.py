@@ -1,6 +1,6 @@
 import requests
 
-def ollama_chat(prompt, model="mistral"):
+def ollama_chat(prompt, model="phi3:mini"):  # ⬅️ use faster model
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={

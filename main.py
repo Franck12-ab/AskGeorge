@@ -1,33 +1,48 @@
-# main.py
-
-from agents.retriever_agent import RetrieverAgent
-from agents.answer_agent import AnswerAgent
+from agents.optimized_retriever_agent import OptimizedRetrieverAgent
+from agents.smart_answer_agent import SmartAnswerAgent
 from llm.ollama_wrapper import ollama_chat
+import time
 
 def main():
-    retriever = RetrieverAgent(
+    print("🚀 Loading optimized AskGeorge+ system...")
+    start_time = time.time()
+
+    retriever = OptimizedRetrieverAgent(
         index_path="logs/chunk_faiss.index",
         metadata_path="logs/chunk_metadata.pkl"
     )
-    answer_agent = AnswerAgent(llm_callable=ollama_chat)
+    answer_agent = SmartAnswerAgent(llm_callable=ollama_chat)
+
+    load_time = time.time() - start_time
+    print(f"✅ System loaded in {load_time:.2f} seconds\n")
 
     while True:
         question = input("❓ Enter your question (or 'exit'): ").strip()
         if question.lower() in ["exit", "quit"]:
             break
 
-        # Step 1: Retrieve chunks
-        retrieved = retriever.retrieve(question)
-        print(f"\n🔍 Found {len(retrieved)} relevant chunks.\n")
+        start_time = time.time()
 
-        for i, chunk in enumerate(retrieved):
-            print(f"[{i+1}] 📄 {chunk['source_file']} | 📁 {chunk['category']}")
-            print(chunk['text'][:300].replace("\n", " ") + "...\n")
+        # Step 1: Smart Retrieval
+        retrieved = retriever.retrieve(question)
+        retrieval_time = time.time() - start_time
+
+        print(f"\n🔍 Found {len(retrieved)} relevant chunks in {retrieval_time:.2f}s\n")
+
+        # Show top 2 chunks
+        for i, chunk in enumerate(retrieved[:2]):
+            print(f"[{i+1}] 📄 {chunk['source_file']} | 📁 {chunk['category']} | Score: {chunk['distance']:.3f}")
+            print(chunk['text'][:200].replace("\n", " ") + "...\n")
 
         # Step 2: Generate answer
-        print("💬 Generating answer...\n")
+        print("💬 Generating answer...")
+        gen_start = time.time()
         answer = answer_agent.generate_answer(question, retrieved)
-        print("✅ Answer:\n")
+        gen_time = time.time() - gen_start
+
+        total_time = time.time() - start_time
+
+        print(f"\n✅ Answer (generated in {gen_time:.2f}s, total: {total_time:.2f}s):\n")
         print(answer)
         print("\n" + "="*80 + "\n")
 
