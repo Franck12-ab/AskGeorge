@@ -19,6 +19,7 @@ raw_data/
 clean_text/
 chunks/
 logs/
+chat_logs/
 
 # MacOS cruft
 .DS_Store
