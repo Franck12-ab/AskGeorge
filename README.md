@@ -134,4 +134,4 @@ This project is licensed under the MIT License.
 
 ## 🙌 Acknowledgements
 
-Built for George Brown College’s AASD 4010 final project by [Your Team Name].
+Built for George Brown College’s project by G9.
