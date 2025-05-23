@@ -1,17 +1,25 @@
 from agents.optimized_retriever_agent import OptimizedRetrieverAgent
 from agents.smart_answer_agent import SmartAnswerAgent
-from llm.ollama_wrapper import ollama_chat
+from llm.llm import choose_llm, get_response  # ✅ unified LLM entrypoint
 import time
 
 def main():
     print("🚀 Loading optimized AskGeorge+ system...")
     start_time = time.time()
 
+    # Load retrieval system
     retriever = OptimizedRetrieverAgent(
         index_path="logs/chunk_faiss.index",
         metadata_path="logs/chunk_metadata.pkl"
     )
-    answer_agent = SmartAnswerAgent(llm_callable=ollama_chat)
+
+    # Ask user which LLM to use
+    llm_mode = choose_llm()
+
+    # Smart answer agent configured with dynamic LLM source
+    answer_agent = SmartAnswerAgent(
+        llm_callable=lambda prompt: get_response(prompt, mode=llm_mode)
+    )
 
     load_time = time.time() - start_time
     print(f"✅ System loaded in {load_time:.2f} seconds\n")
@@ -23,7 +31,7 @@ def main():
 
         start_time = time.time()
 
-        # Step 1: Smart Retrieval
+        # Step 1: Retrieve relevant chunks
         retrieved = retriever.retrieve(question)
         retrieval_time = time.time() - start_time
 
@@ -34,7 +42,7 @@ def main():
             print(f"[{i+1}] 📄 {chunk['source_file']} | 📁 {chunk['category']} | Score: {chunk['distance']:.3f}")
             print(chunk['text'][:200].replace("\n", " ") + "...\n")
 
-        # Step 2: Generate answer
+        # Step 2: Generate answer using chosen LLM
         print("💬 Generating answer...")
         gen_start = time.time()
         answer = answer_agent.generate_answer(question, retrieved)

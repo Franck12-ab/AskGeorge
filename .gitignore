@@ -1,5 +1,6 @@
 # Ignore Python environment and cache files
 env/
+.env
 __pycache__/
 *.pyc
 *.pyo
