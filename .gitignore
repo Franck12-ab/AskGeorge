@@ -17,6 +17,7 @@ __pycache__/
 raw_data/
 clean_text/
 chunks/
+logs/
 
 # MacOS cruft
 .DS_Store
