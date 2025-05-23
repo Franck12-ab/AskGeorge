@@ -13,7 +13,8 @@ meta_info = []
 # Load all chunk texts
 for _, row in chunk_df.iterrows():
     try:
-        with open(f"chunks/{row['source_file'].replace('.pdf', f'_chunk_{row['chunk_id']}.txt')}", "r") as f:
+        chunk_filename = row['source_file'].replace('.pdf', f'_chunk_{row["chunk_id"]}.txt')
+        with open(f"chunks/{chunk_filename}", "r") as f:
             text = f.read().strip()
             chunk_texts.append(text)
             meta_info.append({
