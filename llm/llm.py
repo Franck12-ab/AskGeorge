@@ -4,7 +4,8 @@ import json
 from dotenv import load_dotenv
 import anthropic
 from openai import OpenAI
-import datetime
+from .log import log_llm_interaction
+
 
 # Load environment variables
 load_dotenv()
@@ -13,8 +14,8 @@ load_dotenv()
 openai_client = OpenAI()  # Uses OPENAI_API_KEY
 anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-# === 1. Ollama (Local LLM) ===
-def ollama_chat(prompt, model="phi3:mini"):
+# === 1. Ollama ===
+def ollama_chat(question, prompt, model="phi3:mini"):
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
@@ -22,43 +23,44 @@ def ollama_chat(prompt, model="phi3:mini"):
             timeout=15
         )
         data = response.json()
-        return data.get("response", "⚠️ Ollama error or invalid response").strip()
-    except requests.exceptions.Timeout:
-        return "⚠️ Ollama timed out. Try again after the model is ready."
-    except requests.exceptions.ConnectionError:
-        return "⚠️ Ollama not running. Start it with: `ollama run phi3:mini`"
+        reply = data.get("response", "⚠️ Ollama error or invalid response").strip()
+        log_llm_interaction("ollama", model, question, prompt, response=reply)
+        return reply
     except Exception as e:
+        log_llm_interaction("ollama", model, prompt, error=e)
         return f"⚠️ Ollama error: {e}"
 
-# === 2. OpenAI (Cloud LLM) ===
-def openai_chat(prompt, model="gpt-3.5-turbo"):
+# === 2. OpenAI ===
+def openai_chat(question, prompt, model="gpt-3.5-turbo"):
     try:
         response = openai_client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}]
         )
-        return response.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
+        log_llm_interaction("openai", model,question, prompt, response=reply)
+        return reply
     except Exception as e:
+        log_llm_interaction("openai", model,question, prompt, error=e)
         return f"⚠️ OpenAI error: {e}"
 
-# === 3. Claude (Anthropic LLM) ===
-def claude_chat(prompt, model="claude-3-haiku-20240307"):
+# === 3. Claude ===
+def claude_chat(question, prompt, model="claude-3-haiku-20240307"):
     try:
         response = anthropic_client.messages.create(
             model=model,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        return response.content[0].text.strip()
-    except anthropic.APIStatusError as e:
-        if e.status_code == 400 and "credit balance" in str(e):
-            return "⚠️ Claude is unavailable due to insufficient credits."
-        return f"⚠️ Claude API error: {e}"
+        reply = response.content[0].text.strip()
+        log_llm_interaction("claude", model,question, prompt, response=reply)
+        return reply
     except Exception as e:
-        return f"⚠️ Claude error: {e}"
+        log_llm_interaction("claude", model,question, prompt, error=e)
+        return f"⚠️ Claude API error: {e}"
 
-# === 4. Hugging Face (Free Cloud LLM) ===
-def huggingface_chat(prompt):
+# === 4. Hugging Face ===
+def huggingface_chat(question, prompt):
     api_key = os.getenv("HUGGINGFACE_API_KEY")
     model = os.getenv("HUGGINGFACE_MODEL", "tiiuae/falcon-7b-instruct")
 
@@ -66,7 +68,6 @@ def huggingface_chat(prompt):
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-
     payload = {
         "inputs": prompt,
         "parameters": {"max_new_tokens": 256},
@@ -82,20 +83,17 @@ def huggingface_chat(prompt):
         )
         response.raise_for_status()
         result = response.json()
-        if isinstance(result, list) and "generated_text" in result[0]:
-            return result[0]["generated_text"].strip()
-        else:
-            return f"⚠️ Unexpected Hugging Face response: {result}"
+        reply = result[0]["generated_text"].strip() if isinstance(result, list) else "⚠️ Unexpected response"
+        log_llm_interaction("huggingface", model,question, prompt, response=reply)
+        return reply
     except Exception as e:
+        log_llm_interaction("huggingface", model,question, prompt, error=e)
         return f"⚠️ Hugging Face error: {e}"
 
-# === 5. Google Gemini (Free via AI Studio) ===
-
-
-def gemini_chat(prompt):
+# === 5. Google Gemini ===
+def gemini_chat(question, prompt):
     api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-    log_path = "logs/gemini_chat_log.jsonl"
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
@@ -107,33 +105,16 @@ def gemini_chat(prompt):
         ]
     }
 
-    log_entry = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "model": model,
-        "prompt": prompt,
-        "url": url,
-        "request_payload": data,
-    }
-
     try:
         response = requests.post(url, headers=headers, json=data, timeout=20)
         response.raise_for_status()
         result = response.json()
         reply = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-
-        log_entry["response"] = reply
-        log_entry["status"] = "success"
-
+        log_llm_interaction("gemini", model,question, prompt, response=reply)
+        return reply
     except Exception as e:
-        log_entry["status"] = "error"
-        log_entry["error"] = str(e)
-        reply = f"⚠️ Gemini API error: {e}"
-
-    # Write log entry to file (line-delimited JSON for easy parsing)
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
-
-    return reply
+        log_llm_interaction("gemini", model,question, prompt, error=e)
+        return f"⚠️ Gemini API error: {e}"
 
 # === User Prompt for Model Selection ===
 def choose_llm():
@@ -153,16 +134,16 @@ def choose_llm():
     }.get(choice, "ollama")
 
 # === Unified Chat Handler ===
-def get_response(prompt, mode="ollama"):
+def get_response(question, prompt, mode="ollama"):
     if mode == "ollama":
-        return ollama_chat(prompt)
+        return ollama_chat(question, prompt)
     elif mode == "openai":
-        return openai_chat(prompt)
+        return openai_chat(question, prompt)
     elif mode == "claude":
-        return claude_chat(prompt)
+        return claude_chat(question, prompt)
     elif mode == "huggingface":
-        return huggingface_chat(prompt)
+        return huggingface_chat(question, prompt)
     elif mode == "gemini":
-        return gemini_chat(prompt)
+        return gemini_chat(question, prompt)
     else:
         return "⚠️ Invalid LLM mode."

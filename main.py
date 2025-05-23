@@ -16,11 +16,6 @@ def main():
     # Ask user which LLM to use
     llm_mode = choose_llm()
 
-    # Smart answer agent configured with dynamic LLM source
-    answer_agent = SmartAnswerAgent(
-        llm_callable=lambda prompt: get_response(prompt, mode=llm_mode)
-    )
-
     load_time = time.time() - start_time
     print(f"✅ System loaded in {load_time:.2f} seconds\n")
 
@@ -28,6 +23,9 @@ def main():
         question = input("❓ Enter your question (or 'exit'): ").strip()
         if question.lower() in ["exit", "quit"]:
             break
+        if not question:
+            print("⚠️ Please enter a valid question.\n")
+            continue
 
         start_time = time.time()
 
@@ -44,6 +42,12 @@ def main():
 
         # Step 2: Generate answer using chosen LLM
         print("💬 Generating answer...")
+
+        # Instantiate the SmartAnswerAgent with current question
+        answer_agent = SmartAnswerAgent(
+            llm_callable=lambda prompt: get_response(question, prompt, mode=llm_mode)
+        )
+
         gen_start = time.time()
         answer = answer_agent.generate_answer(question, retrieved)
         gen_time = time.time() - gen_start

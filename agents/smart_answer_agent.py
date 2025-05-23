@@ -2,45 +2,63 @@ class SmartAnswerAgent:
     def __init__(self, llm_callable):
         self.llm = llm_callable
 
+
         self.templates = {
-            'simple': """Answer this question briefly and directly using the context.
+    'simple': """You are a concise and helpful assistant. Answer clearly using only the information below.
 
-Context: {context}
+{context}
+
+Q: {question}
+A:""",
+
+    'complex': """You are a George Brown College assistant. Provide a detailed answer using the relevant information below.
+
+{context}
+
 Question: {question}
+Answer (include steps if applicable):""",
 
-Answer (1-2 sentences):""",
+    'policy': """You are a George Brown College assistant. Respond with a clear summary of the policy, including any exceptions.
 
-            'complex': """You are a George Brown College assistant. Provide a comprehensive answer with steps/requirements.
+{context}
 
-Context: {context}
+Policy question: {question}
+Answer:""",
+
+    'general': """You are a helpful assistant at George Brown College. Respond naturally and informatively using the information below.
+
+{context}
+
 Question: {question}
-
-Answer (include specific steps/requirements):""",
-
-            'policy': """Answer this policy question with specific rules and any exceptions.
-
-Context: {context}
-Question: {question}
-
-Answer (be specific about policies):""",
-
-            'general': """You are a helpful George Brown College assistant. Answer based on the context provided.
-
-Context: {context}
-Question: {question}
-
 Answer:"""
-        }
+}
 
     def _get_query_type(self, question: str) -> str:
         q = question.lower()
-        if any(w in q for w in ['what is', 'define', 'explain briefly']):
-            return 'simple'
-        elif any(w in q for w in ['how to', 'process', 'steps', 'requirements']):
-            return 'complex'
-        elif any(w in q for w in ['policy', 'rule', 'allowed', 'can i']):
-            return 'policy'
-        return 'general'
+
+        if any(phrase in q for phrase in [
+            "what is", "define", "meaning of", "explain", "give me a definition"
+        ]):
+            return "simple"
+
+        elif any(phrase in q for phrase in [
+            "how do", "how to", "steps", "process", "procedure", "guide", "requirement", "instructions"
+        ]):
+            return "complex"
+
+        elif any(phrase in q for phrase in [
+            "policy", "rule", "allowed", "not allowed", "can i", "permitted", "regulation", "compliance"
+        ]):
+            return "policy"
+
+        elif any(phrase in q for phrase in [
+            "who are you", "what can you do", "your purpose", "what is this", "introduce yourself"
+        ]):
+            return "general"  # general personality/system question
+
+        else:
+            return "general"
+
 
     def _smart_context_selection(self, retrieved_chunks, max_tokens=2000):
         sorted_chunks = sorted(retrieved_chunks, key=lambda x: x.get('distance', 0))
