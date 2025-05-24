@@ -108,7 +108,7 @@ python scripts/embed_chunks.py
 ```bash
 python app.py
 ```
-Then open http://localhost:5000 in your browser.
+Then open http://localhost:10000 in your browser.
 
 You'll be prompted to choose your preferred LLM:
 1. Local (Ollama)
@@ -156,6 +156,7 @@ Standalone CLI to test FAISS retrieval and chunk quality.
 | `logs/text_metadata.csv` | Word/char count of cleaned files     |
 | `chunk_faiss.index`      | FAISS index for vector search        |
 | `chunk_metadata.pkl`     | Metadata for each chunk              |
+| `chat_logs`              | Chat logs - toggle on llm.py         |
 
 ---
 
