@@ -14,6 +14,10 @@ __pycache__/
 *.so
 *.node
 
+# Allow specific model files
+!model/chunk_metadata.pkl
+!model/chunk_faiss.index
+
 # Ignore dataset folders
 raw_data/
 clean_text/
