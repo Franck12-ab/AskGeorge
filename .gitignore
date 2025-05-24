@@ -6,6 +6,8 @@ __pycache__/
 *.pyo
 *.pyd
 
+chroma_index/
+
 # Ignore logs, large files, and binary data
 *.log
 *.index

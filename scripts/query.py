@@ -1,31 +1,30 @@
-import faiss
-import pickle
-import numpy as np
+import chromadb
 from sentence_transformers import SentenceTransformer
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-# Load index + metadata
-index = faiss.read_index("logs/chunk_faiss.index")
-with open("logs/chunk_metadata.pkl", "rb") as f:
-    meta = pickle.load(f)
+# === Load ChromaDB index ===
+client = chromadb.PersistentClient(path="chroma_index")
+collection = client.get_collection("askgeorge")
 
-# Load model
+# === Use same embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def query(question, top_k=5):
-    q_embedding = model.encode([question])
-    distances, indices = index.search(np.array(q_embedding), top_k)
+    q_embedding = model.encode([question]).tolist()
+
+    results = collection.query(
+        query_embeddings=q_embedding,
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"]
+    )
 
     print(f"\n🔍 Top {top_k} results for: \"{question}\"\n")
-    for rank, idx in enumerate(indices[0]):
-        result = meta[idx]
-        print(f"[{rank+1}] 📄 {result['source_file']} | 📁 {result['category']}")
-        chunk_path = f"chunks/{result['source_file'].replace('.pdf', f'_chunk_{result['chunk_id']}.txt')}"
-        with open(chunk_path, "r") as f:
-            text = f.read().strip()
-            print(text[:500].replace("\n", " ") + "...\n")
 
+    for rank, (doc, meta) in enumerate(zip(results["documents"][0], results["metadatas"][0])):
+        print(f"[{rank+1}] 📄 {meta['source_file']} | 📁 {meta['category']}")
+        print(doc[:500].replace("\n", " ") + "...\n")
 
-# Example
+# === CLI Loop ===
 if __name__ == "__main__":
     while True:
         q = input("❓ Enter your question (or 'exit'): ")

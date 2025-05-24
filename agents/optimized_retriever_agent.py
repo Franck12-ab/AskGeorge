@@ -1,18 +1,13 @@
-import faiss
-import pickle
-import numpy as np
+import chromadb
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Optional
-import logging
 from functools import lru_cache
+from typing import List, Dict, Optional
 
 class OptimizedRetrieverAgent:
-    def __init__(self, index_path, metadata_path, model_name="all-MiniLM-L6-v2"):
-        self.index = faiss.read_index(index_path)
-        with open(metadata_path, "rb") as f:
-            self.meta = pickle.load(f)
+    def __init__(self, persist_path, collection_name="askgeorge", model_name="all-MiniLM-L6-v2"):
+        self.client = chromadb.PersistentClient(path=persist_path)
+        self.collection = self.client.get_or_create_collection(name=collection_name)
         self.model = SentenceTransformer(model_name)
-        self.chunk_cache = self._load_all_chunks()
 
         self.query_patterns = {
             'simple': ['what is', 'define', 'explain'],
@@ -20,18 +15,6 @@ class OptimizedRetrieverAgent:
             'comparison': ['vs', 'versus', 'difference', 'compare'],
             'policy': ['policy', 'rule', 'regulation', 'allowed']
         }
-
-    def _load_all_chunks(self) -> Dict[int, str]:
-        cache = {}
-        for i, meta_item in enumerate(self.meta):
-            chunk_file = meta_item['source_file'].replace('.pdf', f"_chunk_{meta_item['chunk_id']}.txt")
-            try:
-                with open(f"chunks/{chunk_file}", "r") as f:
-                    cache[i] = f.read().strip()
-            except Exception as e:
-                logging.warning(f"❌ Failed to load chunk {i}: {e}")
-                cache[i] = ""
-        return cache
 
     def _classify_query(self, question: str) -> str:
         q = question.lower()
@@ -51,31 +34,39 @@ class OptimizedRetrieverAgent:
 
     @lru_cache(maxsize=128)
     def _cached_embedding(self, question: str):
-        return self.model.encode([question])
+        # ✅ Correct: returns 1D list, not [[...]]
+        return self.model.encode(question).tolist()
 
     def retrieve(self, question: str, top_k: Optional[int] = None, rerank: bool = False, llm_callable=None) -> List[Dict]:
-
         query_type = self._classify_query(question)
         k = top_k or self._get_dynamic_k(query_type, question)
 
-        q_embedding = self._cached_embedding(question)
-        distances, indices = self.index.search(np.array(q_embedding), k)
+        query_vec = self._cached_embedding(question)
 
-        results = []
-        for idx, dist in zip(indices[0], distances[0]):
-            if idx < len(self.meta):
-                results.append({
-                    "source_file": self.meta[idx]['source_file'],
-                    "category": self.meta[idx]['category'],
-                    "chunk_id": self.meta[idx]['chunk_id'],
-                    "text": self.chunk_cache.get(idx, ""),
-                    "distance": float(dist)
-                })
+        results = self.collection.query(
+            query_embeddings=[query_vec],  # ✅ Accepts a list of 1D vectors
+            n_results=k,
+            include=["documents", "metadatas", "distances"]
+        )
+
+        documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
+        distances = results["distances"][0]
+
+        output = []
+        for doc, meta, dist in zip(documents, metadatas, distances):
+            output.append({
+                "source_file": meta.get("source_file", "unknown"),
+                "category": meta.get("category", "unknown"),
+                "chunk_id": meta.get("chunk_id", "unknown"),
+                "text": doc,
+                "distance": dist
+            })
 
         if rerank and llm_callable:
-            results = self._rerank_with_llm(question, results, llm_callable)
+            output = self._rerank_with_llm(question, output, llm_callable)
 
-        return results
+        return output
 
     def _rerank_with_llm(self, question: str, results: List[Dict], llm_callable, top_n: int = 5) -> List[Dict]:
         prompts = [
@@ -92,4 +83,3 @@ class OptimizedRetrieverAgent:
 
         reranked = sorted(zip(scores, results), key=lambda x: -x[0])
         return [r[1] for r in reranked[:top_n]]
-
