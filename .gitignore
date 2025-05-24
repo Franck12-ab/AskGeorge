@@ -21,7 +21,6 @@ __pycache__/
 # Ignore dataset folders
 raw_data/
 clean_text/
-chunks/
 logs/
 chat_logs/
 

@@ -11,8 +11,8 @@ def main():
 
     # Load retrieval system
     retriever = OptimizedRetrieverAgent(
-        index_path="logs/chunk_faiss.index",
-        metadata_path="logs/chunk_metadata.pkl"
+        index_path="model/chunk_faiss.index",
+        metadata_path="model/chunk_metadata.pkl"
     )
 
     # Ask user which LLM to use
