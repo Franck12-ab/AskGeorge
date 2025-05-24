@@ -42,7 +42,7 @@ AskGeorge+ is a Retrieval-Augmented Generation (RAG) system built with modular a
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/askgeorge.git
+git clone https://github.com/birajgtm/askgeorge-.git
 cd askgeorge
 ```
 
