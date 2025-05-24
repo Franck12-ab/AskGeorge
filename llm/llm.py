@@ -6,9 +6,11 @@ import anthropic
 from openai import OpenAI
 from .log import log_llm_interaction
 
-
 # Load environment variables
 load_dotenv()
+
+# Global logging toggle
+log = False
 
 # Initialize clients
 openai_client = OpenAI()  # Uses OPENAI_API_KEY
@@ -24,10 +26,12 @@ def ollama_chat(question, prompt, model="phi3:mini"):
         )
         data = response.json()
         reply = data.get("response", "⚠️ Ollama error or invalid response").strip()
-        log_llm_interaction("ollama", model, question, prompt, response=reply)
+        if log:
+            log_llm_interaction("ollama", model, question, prompt, response=reply)
         return reply
     except Exception as e:
-        log_llm_interaction("ollama", model, prompt, error=e)
+        if log:
+            log_llm_interaction("ollama", model, prompt, error=e)
         return f"⚠️ Ollama error: {e}"
 
 # === 2. OpenAI ===
@@ -38,10 +42,12 @@ def openai_chat(question, prompt, model="gpt-3.5-turbo"):
             messages=[{"role": "user", "content": prompt}]
         )
         reply = response.choices[0].message.content.strip()
-        log_llm_interaction("openai", model,question, prompt, response=reply)
+        if log:
+            log_llm_interaction("openai", model, question, prompt, response=reply)
         return reply
     except Exception as e:
-        log_llm_interaction("openai", model,question, prompt, error=e)
+        if log:
+            log_llm_interaction("openai", model, question, prompt, error=e)
         return f"⚠️ OpenAI error: {e}"
 
 # === 3. Claude ===
@@ -53,10 +59,12 @@ def claude_chat(question, prompt, model="claude-3-haiku-20240307"):
             messages=[{"role": "user", "content": prompt}]
         )
         reply = response.content[0].text.strip()
-        log_llm_interaction("claude", model,question, prompt, response=reply)
+        if log:
+            log_llm_interaction("claude", model, question, prompt, response=reply)
         return reply
     except Exception as e:
-        log_llm_interaction("claude", model,question, prompt, error=e)
+        if log:
+            log_llm_interaction("claude", model, question, prompt, error=e)
         return f"⚠️ Claude API error: {e}"
 
 # === 4. Hugging Face ===
@@ -84,10 +92,12 @@ def huggingface_chat(question, prompt):
         response.raise_for_status()
         result = response.json()
         reply = result[0]["generated_text"].strip() if isinstance(result, list) else "⚠️ Unexpected response"
-        log_llm_interaction("huggingface", model,question, prompt, response=reply)
+        if log:
+            log_llm_interaction("huggingface", model, question, prompt, response=reply)
         return reply
     except Exception as e:
-        log_llm_interaction("huggingface", model,question, prompt, error=e)
+        if log:
+            log_llm_interaction("huggingface", model, question, prompt, error=e)
         return f"⚠️ Hugging Face error: {e}"
 
 # === 5. Google Gemini ===
@@ -110,10 +120,12 @@ def gemini_chat(question, prompt):
         response.raise_for_status()
         result = response.json()
         reply = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-        log_llm_interaction("gemini", model,question, prompt, response=reply)
+        if log:
+            log_llm_interaction("gemini", model, question, prompt, response=reply)
         return reply
     except Exception as e:
-        log_llm_interaction("gemini", model,question, prompt, error=e)
+        if log:
+            log_llm_interaction("gemini", model, question, prompt, error=e)
         return f"⚠️ Gemini API error: {e}"
 
 # === User Prompt for Model Selection ===
