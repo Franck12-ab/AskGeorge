@@ -4,9 +4,13 @@ from agents.optimized_retriever_agent import OptimizedRetrieverAgent
 from agents.smart_answer_agent import SmartAnswerAgent
 from llm.llm import get_response
 import time
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key' # Use a strong, random key
+
+
+port = int(os.environ.get("PORT", 10000))
 
 retriever = OptimizedRetrieverAgent(
     index_path="logs/chunk_faiss.index",
@@ -82,5 +86,5 @@ def clear():
     session.modified = True
     return redirect(url_for('chat')) # Or to select_model if preferred
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=port)
