@@ -13,8 +13,8 @@ app.secret_key = 'your-secret-key' # Use a strong, random key
 port = int(os.environ.get("PORT", 10000))
 
 retriever = OptimizedRetrieverAgent(
-    index_path="logs/chunk_faiss.index",
-    metadata_path="logs/chunk_metadata.pkl"
+    index_path="model/chunk_faiss.index",
+    metadata_path="model/chunk_metadata.pkl"
 )
 
 @app.route('/', methods=['GET', 'POST'])
