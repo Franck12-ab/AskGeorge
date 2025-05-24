@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AskGeorge+ Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ... (Your existing CSS from the "modern chat UI" example - NO CHANGES NEEDED HERE for this speedup) ... */
+    /* Ensure your existing CSS for .typing-indicator, .ai-message .message-bubble.typing is present */
+    :root {
+      --bg-color: #181818; /* Slightly different dark */
+      --surface-color: #212121;
+      --primary-text-color: #e0e0e0;
+      --secondary-text-color: #b0b0b0;
+      --accent-color: #007bff; /* GBC-like blue or your brand color */
+      --user-msg-bg: #00509e; /* Darker blue for user messages */
+      --ai-msg-bg: #2c2c2c; /* Dark grey for AI messages */
+      --input-bg: #282828;
+      --border-color: #333;
+      --typing-indicator-color: #777; /* Ensure this is defined if not already */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-text-color);
+    }
+
+    .chat-app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh; /* Full viewport height */
+      max-width: 900px; /* Max width for the chat app */
+      margin: 0 auto; /* Center the app */
+      box-shadow: 0 0 20px rgba(0,0,0,0.2); /* Optional: add a subtle shadow to the app container */
+    }
+
+    .chat-header {
+      background-color: var(--surface-color);
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    .chat-header h5 {
+      margin-bottom: 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .chat-header .llm-badge {
+        font-size: 0.75rem;
+        padding: 0.3em 0.6em;
+        border-radius: 4px;
+    }
+
+
+    .chat-header .btn-back, .chat-header .btn-clear {
+      color: var(--secondary-text-color);
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .chat-header .btn-back:hover, .chat-header .btn-clear:hover {
+      background-color: var(--accent-color);
+      color: #fff;
+      border-color: var(--accent-color);
+    }
+     .chat-header .btn-back i, .chat-header .btn-clear i {
+        margin-right: 0.3rem;
+    }
+
+
+    .chat-messages-area {
+      flex-grow: 1; /* Takes up available space */
+      overflow-y: auto; /* Enables scrolling for messages */
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message-entry {
+      display: flex;
+      margin-bottom: 1.25rem;
+      max-width: 85%; /* Messages don't span full width */
+    }
+
+    .message-bubble {
+      padding: 0.8rem 1.2rem;
+      border-radius: 18px; /* Bubble shape */
+      line-height: 1.6;
+      word-wrap: break-word; /* Ensure long words break */
+      white-space: pre-wrap; /* Respect newlines from the AI */
+    }
+
+    .user-message .message-bubble {
+      background-color: var(--user-msg-bg);
+      color: #ffffff;
+      border-bottom-right-radius: 4px; /* "Tail" effect */
+    }
+    .user-message {
+        align-self: flex-end; /* Align user messages to the right */
+        margin-left: auto; /* Push to the right */
+    }
+    .user-message .avatar {
+        margin-left: 0.75rem;
+        order: 1; /* Avatar after bubble */
+    }
+
+
+    .ai-message .message-bubble {
+      background-color: var(--ai-msg-bg);
+      color: var(--primary-text-color);
+      border-bottom-left-radius: 4px; /* "Tail" effect */
+    }
+    .ai-message {
+        align-self: flex-start; /* Align AI messages to the left */
+    }
+     .ai-message .avatar {
+        margin-right: 0.75rem;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    .user-message .avatar { background-color: #007bff; color: white; }
+    .ai-message .avatar { background-color: #6c757d; color: white; }
+
+
+    /* Typing indicator */
+    .ai-message .message-bubble.typing {
+        min-height: 2.5em; /* Ensure bubble has some height while typing */
+        display: flex;
+        align-items: center;
+    }
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        /* padding: 0.5rem 0; */ /* Removed padding to make it fit better in bubble */
+    }
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: var(--typing-indicator-color); /* Changed from secondary-text-color */
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1.0); }
+    }
+
+
+    .input-bar-area {
+      background-color: var(--surface-color);
+      padding: 1rem 1.5rem; /* Adjusted padding */
+      border-top: 1px solid var(--border-color);
+      flex-shrink: 0; /* Prevent input bar from shrinking */
+    }
+
+    .input-bar-area form {
+      display: flex;
+      align-items: center; /* Vertically align items */
+      gap: 0.75rem; /* Space between input and button */
+    }
+
+    .input-bar-area .form-control {
+      flex-grow: 1; /* Input field takes available space */
+      background-color: var(--input-bg);
+      color: var(--primary-text-color);
+      border: 1px solid #444;
+      border-radius: 20px; /* Pill shape input */
+      padding: 0.75rem 1.25rem; /* More padding */
+      font-size: 1rem;
+    }
+    .input-bar-area .form-control:focus {
+      background-color: #333;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+    }
+    .input-bar-area .form-control::placeholder {
+        color: var(--secondary-text-color);
+    }
+
+    .input-bar-area .btn-send {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 50%; /* Circular send button */
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem; /* Icon size */
+      transition: background-color 0.2s;
+      flex-shrink: 0;
+    }
+    .input-bar-area .btn-send:hover {
+      background-color: #0056b3; /* Darker accent on hover */
+    }
+
+    /* Scrollbar styling (optional, for webkit browsers) */
+    .chat-messages-area::-webkit-scrollbar {
+        width: 8px;
+    }
+    .chat-messages-area::-webkit-scrollbar-track {
+        background: var(--surface-color);
+    }
+    .chat-messages-area::-webkit-scrollbar-thumb {
+        background-color: #555;
+        border-radius: 10px;
+        border: 2px solid var(--surface-color);
+    }
+    .chat-messages-area::-webkit-scrollbar-thumb:hover {
+        background-color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-app-container">
+    <header class="chat-header">
+        <a href="/" class="btn btn-back"><i class="fas fa-chevron-left"></i> Back</a>
+        <h5><i class="fas fa-brain"></i> AskGeorge+ <span class="badge bg-info llm-badge">{{ selected_llm|capitalize }}</span></h5>
+        <a href="{{ url_for('clear') }}" class="btn btn-clear"><i class="fas fa-trash-alt"></i> Clear</a>
+    </header>
+
+    <main class="chat-messages-area" id="chatMessagesArea">
+      {# Iterate over existing chat history normally #}
+      {% for entry in chat_history %}
+        <div class="message-entry user-message">
+          <div class="message-bubble">
+            {{ entry.question }}
+          </div>
+          <div class="avatar">🧑</div>
+        </div>
+        <div class="message-entry ai-message">
+          <div class="avatar">🤖</div>
+          <div class="message-bubble"> {# Removed unique ID, not strictly needed for past messages #}
+            {{ entry.answer | safe }} {# Render past answers directly #}
+          </div>
+        </div>
+      {% endfor %}
+    </main>
+
+    <footer class="input-bar-area">
+      <form method="POST" id="chatForm">
+        <input type="text" name="question" id="questionInput" class="form-control" placeholder="Ask George anything..." autocomplete="off" required autofocus>
+        <button type="submit" class="btn btn-send" aria-label="Send message">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </footer>
+  </div>
+
+<script>
+    const chatMessagesArea = document.getElementById('chatMessagesArea');
+    const chatForm = document.getElementById('chatForm');
+    const questionInput = document.getElementById('questionInput');
+
+    function scrollToBottom() {
+        // Add a small delay to ensure new content is rendered before scrolling
+        setTimeout(() => {
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+        }, 50);
+    }
+
+    function escapeHtml(unsafe) {
+        if (typeof unsafe !== 'string') return '';
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
+    function addMessageToChat(text, type, isTyping = false) {
+        const messageEntry = document.createElement('div');
+        messageEntry.classList.add('message-entry', type === 'user' ? 'user-message' : 'ai-message');
+
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar');
+        avatar.textContent = type === 'user' ? '🧑' : '🤖';
+
+        const messageBubble = document.createElement('div');
+        messageBubble.classList.add('message-bubble');
+
+        if (isTyping) {
+            messageBubble.classList.add('typing');
+            messageBubble.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+            // Give the parent entry an ID so we can find its bubble
+            messageEntry.id = 'aiTypingMessageEntry'; 
+        } else {
+            // For user messages or fully rendered AI messages (like from history)
+            // Use textContent to prevent XSS if 'text' is not pre-sanitized
+            // If you expect HTML in 'text' from the LLM AND it's already sanitized by Jinja's 'safe' filter
+            // you might use innerHTML here, but generally textContent is safer for dynamic JS additions.
+            // For this function, let's assume text is plain or already safe.
+            messageBubble.innerHTML = text;
+        }
+
+        if (type === 'user') {
+            messageEntry.appendChild(messageBubble);
+            messageEntry.appendChild(avatar);
+        } else {
+            messageEntry.appendChild(avatar);
+            messageEntry.appendChild(messageBubble);
+        }
+        chatMessagesArea.appendChild(messageEntry);
+        scrollToBottom();
+        // If it's a typing indicator, we return the bubble itself for manipulation
+        return isTyping ? messageBubble : messageEntry; 
+    }
+
+    function typeEffectWordByWord(element, text, wordDelay = 70, onComplete = null) { // wordDelay in milliseconds
+        element.classList.remove('typing'); // Remove typing class/indicator from bubble
+        element.innerHTML = ''; // Clear typing indicator
+        
+        // Split by space to get words. This also handles newlines if they are part of the text.
+        // We use textContent to avoid interpreting HTML tags during splitting if any were accidentally passed.
+        const words = text.trim().split(/(\s+)/); // Split by spaces/newlines, keeping delimiters
+        let i = 0;
+
+        function typeWord() {
+            if (i < words.length) {
+                // Append word and the following space/newline (if any)
+                // Use textContent for appending to avoid XSS if words contain HTML-like chars
+                element.textContent += words[i]; 
+                if (words[i+1] && words[i+1].match(/\s+/)) { // If next is a space/newline
+                    element.textContent += words[i+1];
+                    i++; // Skip the space/newline in next iteration
+                }
+                i++;
+                scrollToBottom();
+                setTimeout(typeWord, wordDelay);
+            } else if (onComplete) {
+                onComplete();
+            }
+        }
+        // Small delay before starting to show the first word
+        setTimeout(typeWord, 100); 
+    }
+
+
+    // Initial scroll for existing messages (from server-side render)
+    document.addEventListener('DOMContentLoaded', function() {
+        scrollToBottom();
+        const questionInput = document.getElementById('questionInput');
+        if(questionInput) {
+            questionInput.focus();
+        }
+    });
+
+
+    chatForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const questionText = questionInput.value.trim();
+        if (!questionText) return;
+
+        // Display user's question immediately
+        // Escape user input before displaying if you're inserting it via innerHTML,
+        // or use textContent. addMessageToChat already handles this.
+        addMessageToChat(escapeHtml(questionText), 'user');
+        questionInput.value = ''; // Clear input field
+        questionInput.focus(); // Refocus for next message
+
+        // Display AI typing indicator (addMessageToChat returns the bubble for typing)
+        const aiTypingBubble = addMessageToChat('', 'ai', true);
+
+        try {
+            const response = await fetch("{{ url_for('chat') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ question: questionText })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ answer: "An unexpected network error occurred." }));
+                throw new Error(errorData.answer || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // The aiTypingBubble is the element we want to type into
+            if (aiTypingBubble && data.answer) {
+                 // Pass the bubble directly, not its parent entry
+                typeEffectWordByWord(aiTypingBubble, data.answer, 70, () => { // Adjust wordDelay (e.g., 70ms)
+                    // Typing complete, remove the ID from parent entry if we set it for the entry
+                    const typingEntry = document.getElementById('aiTypingMessageEntry');
+                    if (typingEntry) typingEntry.removeAttribute('id');
+                });
+            } else if (aiTypingBubble) { // Handle case where answer might be empty
+                 aiTypingBubble.innerHTML = "No answer received.";
+                 aiTypingBubble.classList.remove('typing');
+                 const typingEntry = document.getElementById('aiTypingMessageEntry');
+                 if (typingEntry) typingEntry.removeAttribute('id');
+            }
+
+
+        } catch (error) {
+            console.error('Error fetching/processing AI response:', error);
+            let errorMessage = "Sorry, something went wrong.";
+            if (error instanceof Error && error.message) {
+                errorMessage = error.message;
+            }
+            
+            // Try to replace the typing indicator with the error message
+            const typingBubbleOnError = document.querySelector('#aiTypingMessageEntry .message-bubble');
+            if (typingBubbleOnError) {
+                typingBubbleOnError.innerHTML = escapeHtml(errorMessage); // Display error safely
+                typingBubbleOnError.classList.remove('typing');
+                const typingEntry = document.getElementById('aiTypingMessageEntry');
+                if(typingEntry) typingEntry.removeAttribute('id');
+            } else {
+                // Fallback if typing indicator wasn't found
+                addMessageToChat(escapeHtml(errorMessage), 'ai');
+            }
+        }
+    });
+</script>
+</body>
+</html>

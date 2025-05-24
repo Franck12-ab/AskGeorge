@@ -1,3 +1,5 @@
+#not needed now, the endtry point is app.py
+
 from agents.optimized_retriever_agent import OptimizedRetrieverAgent
 from agents.smart_answer_agent import SmartAnswerAgent
 from llm.llm import choose_llm, get_response  # ✅ unified LLM entrypoint
@@ -30,7 +32,12 @@ def main():
         start_time = time.time()
 
         # Step 1: Retrieve relevant chunks
-        retrieved = retriever.retrieve(question)
+        retrieved = retriever.retrieve(
+            question,
+            rerank=False,
+            llm_callable=lambda prompt: get_response(question, prompt, mode=llm_mode)
+            )
+
         retrieval_time = time.time() - start_time
 
         print(f"\n🔍 Found {len(retrieved)} relevant chunks in {retrieval_time:.2f}s\n")

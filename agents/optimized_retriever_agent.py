@@ -53,7 +53,8 @@ class OptimizedRetrieverAgent:
     def _cached_embedding(self, question: str):
         return self.model.encode([question])
 
-    def retrieve(self, question: str, top_k: Optional[int] = None) -> List[Dict]:
+    def retrieve(self, question: str, top_k: Optional[int] = None, rerank: bool = False, llm_callable=None) -> List[Dict]:
+
         query_type = self._classify_query(question)
         k = top_k or self._get_dynamic_k(query_type, question)
 
@@ -61,13 +62,34 @@ class OptimizedRetrieverAgent:
         distances, indices = self.index.search(np.array(q_embedding), k)
 
         results = []
-        for idx in indices[0]:
+        for idx, dist in zip(indices[0], distances[0]):
             if idx < len(self.meta):
                 results.append({
                     "source_file": self.meta[idx]['source_file'],
                     "category": self.meta[idx]['category'],
                     "chunk_id": self.meta[idx]['chunk_id'],
                     "text": self.chunk_cache.get(idx, ""),
-                    "distance": float(distances[0][len(results)])
+                    "distance": float(dist)
                 })
+
+        if rerank and llm_callable:
+            results = self._rerank_with_llm(question, results, llm_callable)
+
         return results
+
+    def _rerank_with_llm(self, question: str, results: List[Dict], llm_callable, top_n: int = 5) -> List[Dict]:
+        prompts = [
+            f"Rate the relevance of the following text to the question:\n\nQuestion: {question}\nText: {item['text']}\n\nScore (0-10):"
+            for item in results
+        ]
+        scores = []
+        for prompt in prompts:
+            try:
+                score = int(llm_callable(prompt))
+            except Exception:
+                score = 0
+            scores.append(score)
+
+        reranked = sorted(zip(scores, results), key=lambda x: -x[0])
+        return [r[1] for r in reranked[:top_n]]
+

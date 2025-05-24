@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Select LLM - AskGeorge+</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #121212; /* Dark background */
+      color: #e0e0e0; /* Light grey text */
+      font-family: 'Inter', sans-serif; /* Modern sans-serif font */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background-color: #1e1e1e; /* Slightly lighter dark for card */
+      border: 1px solid #333; /* Subtle border */
+      border-radius: 12px; /* More rounded corners */
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Softer shadow */
+      max-width: 450px; /* Slightly narrower */
+      width: 100%;
+    }
+
+    .card-header {
+      background-color: #00509e; /* GBC-like blue, or choose your brand color */
+      color: #ffffff;
+      font-size: 1.5rem; /* Larger header text */
+      font-weight: 600;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      border-top-left-radius: 11px; /* Match card rounding */
+      border-top-right-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .card-header .icon {
+        font-size: 1.8rem; /* Robot icon size */
+    }
+
+    .card-body {
+      padding: 2rem; /* More padding inside */
+    }
+
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 0.75rem; /* More space below label */
+      color: #b0b0b0; /* Lighter label color */
+    }
+
+    .form-select {
+      background-color: #2c2c2c; /* Darker select background */
+      color: #e0e0e0;
+      border: 1px solid #444; /* Slightly more visible border */
+      border-radius: 8px; /* Rounded select */
+      padding: 0.75rem 1rem; /* Better padding */
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .form-select:focus {
+      background-color: #333;
+      color: #f1f1f1;
+      border-color: #007bff; /* Focus color */
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Focus shadow */
+    }
+
+    .btn-custom-submit {
+      background-color: #007bff; /* Primary action blue */
+      border: none;
+      color: #ffffff;
+      font-weight: 600;
+      padding: 0.85rem 1.5rem; /* Generous padding */
+      border-radius: 8px; /* Rounded button */
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+      width: 100%;
+      margin-top: 1.5rem; /* Space above button */
+      font-size: 1.05rem;
+    }
+
+    .btn-custom-submit:hover {
+      background-color: #0056b3; /* Darker blue on hover */
+      transform: translateY(-2px); /* Slight lift on hover */
+    }
+
+    .btn-custom-submit:active {
+        transform: translateY(0px); /* Press down effect */
+    }
+
+    /* Optional: Add a little footer for flair */
+    .footer-text {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.85rem;
+        color: #555;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="card mx-auto">
+      <div class="card-header">
+        <span class="icon">🤖</span> AskGeorge+
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-4"> 
+            <label for="llm" class="form-label">Select Your Assistant AI</label>
+            <select name="llm" id="llm" class="form-select form-select-lg"> {/* form-select-lg for a bigger dropdown */}
+              <option value="ollama">Local: Ollama (phi3:mini)</option>
+              <option value="openai">Cloud: OpenAI (GPT-3.5)</option>
+              <option value="claude">Cloud: Anthropic (Claude)</option>
+              <option value="huggingface">Cloud: Hugging Face (Falcon)</option>
+              <option value="gemini">Cloud: Google (Gemini)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-custom-submit">
+            Continue to Chat
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-short ms-2" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+    <!-- <div class="footer-text">Powered by GBC Innovation</div> -->
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
