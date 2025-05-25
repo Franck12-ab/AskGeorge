@@ -5,9 +5,7 @@ from pathlib import Path
 output_csv = "logs/all_text_metadata.csv"
 folders = {
     "clean_text": "PDF",
-    "raw_programs": "Program Page",
-    "raw_html": "HTML Page",
-    "raw_coned": "ConEd Page"
+    "pages": "All Page",
 }
 
 os.makedirs("logs", exist_ok=True)

@@ -6,7 +6,7 @@ __pycache__/
 *.pyo
 *.pyd
 
-chroma_index/
+
 
 # Ignore logs, large files, and binary data
 *.log
@@ -16,15 +16,17 @@ chroma_index/
 *.so
 *.node
 
-# Allow specific model files
-!model/chunk_metadata.pkl
-!model/chunk_faiss.index
-
 # Ignore dataset folders
 raw_data/
 clean_text/
 logs/
 chat_logs/
+chroma_index/
+chunks/
+pdfs/
+*.pdf
+pages/
+
 
 # MacOS cruft
 .DS_Store

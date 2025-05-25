@@ -1,31 +1,31 @@
 import os
 import pdfplumber
 import csv
-import pandas as pd
 
-raw_folder = "raw_data"
-clean_folder = "clean_text"
-metadata_path = "logs/metadata.csv"
-output_csv = "logs/text_metadata.csv"
+# Paths
+script_dir = os.path.dirname(__file__)              # scripts/
+base_dir = os.path.abspath(os.path.join(script_dir, ".."))  # your root folder
 
-# Ensure clean_text folder exists
+raw_folder = os.path.join(base_dir, "pdfs")         # ../pdfs
+clean_folder = os.path.join(base_dir, "clean_text") # ../clean_text
+output_csv = os.path.join(base_dir, "logs", "text_metadata.csv")
+
+# Ensure folders exist
 os.makedirs(clean_folder, exist_ok=True)
+os.makedirs(os.path.join(base_dir, "logs"), exist_ok=True)
 
-# Load PDF metadata
-metadata = pd.read_csv(metadata_path)
-
-# Open the output log CSV
+# Write metadata CSV
 with open(output_csv, mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["filename", "text_file", "word_count", "char_count", "category"])
 
-    # Iterate over all PDF files
     for filename in os.listdir(raw_folder):
         if not filename.endswith(".pdf"):
             continue
 
         pdf_path = os.path.join(raw_folder, filename)
-        txt_path = os.path.join(clean_folder, filename.replace(".pdf", ".txt"))
+        txt_filename = filename.replace(".pdf", ".txt")
+        txt_path = os.path.join(clean_folder, txt_filename)
 
         try:
             with pdfplumber.open(pdf_path) as pdf:
@@ -34,12 +34,9 @@ with open(output_csv, mode="w", newline="") as f:
             with open(txt_path, "w", encoding="utf-8") as f_txt:
                 f_txt.write(full_text)
 
-            # Match category from metadata
-            match = metadata[metadata['filename'] == filename]
-            category = match.iloc[0]['category'] if not match.empty else "Unknown"
-
             word_count = len(full_text.split())
             char_count = len(full_text)
+            category = "Unknown"  # or hardcoded if needed
 
             writer.writerow([filename, txt_path, word_count, char_count, category])
             print(f"✅ Processed: {filename} → {word_count} words")
