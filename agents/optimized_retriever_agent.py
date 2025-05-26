@@ -25,7 +25,7 @@ class OptimizedRetrieverAgent:
 
     def _get_dynamic_k(self, query_type: str, question: str) -> int:
         if query_type == 'simple':
-            return 2
+            return 3
         elif query_type == 'complex':
             return 7
         elif len(question.split()) > 15:
