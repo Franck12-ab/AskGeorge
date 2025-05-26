@@ -1,22 +1,24 @@
 # AskGeorge+ 🧠📚  
 *A Multi-Agent AI Support Assistant for George Brown College*
 
-AskGeorge+ is a Retrieval-Augmented Generation (RAG) system built with modular agents to help George Brown College students get quick, accurate answers to academic and administrative questions. It combines document scraping, semantic search with FAISS, and natural language answers powered by both local and cloud LLMs, with a modern Flask web interface.
+AskGeorge+ is a Retrieval-Augmented Generation (RAG) system built with modular agents to help George Brown College students get quick, accurate answers to academic and administrative questions. It combines document scraping, semantic search with ChromaDB, and natural language answers powered by both local and cloud LLMs, with a modern Flask web interface.
+
+🌐 **Live Demo**: [askgeorge.onrender.com](https://askgeorge.onrender.com)
 
 ---
 
 ## 🔧 Features
 
-- 📄 Web scraper for George Brown College PDFs  
-- 📚 Semantic chunking + embedding with FAISS  
-- 🔍 OptimizedRetrieverAgent: filters and ranks chunks  
+- 📄 Web scraper for George Brown College PDFs with automated processing pipeline  
+- 📚 Semantic chunking + embedding powered by ChromaDB  
+- 🔍 OptimizedRetrieverAgent: filters and ranks relevant ChromaDB chunks  
 - 💬 SmartAnswerAgent: context-aware LLM prompt engine  
 - 🧠 Multiple LLM Support:
   - Local: Ollama (phi3:mini, mistral)
   - Cloud: OpenAI GPT-3.5/4, Claude, Gemini, Hugging Face
 - 🔐 Secure API key management via environment variables
 - 🌐 Modern Flask web interface with real-time chat
-- 🧪 CLI assistant with chunk preview + response timing  
+- 🧪 CLI assistant with ChromaDB chunk preview + response timing  
 - 🗃️ Logs, metadata, and word/token EDA support  
 
 ---
@@ -25,15 +27,16 @@ AskGeorge+ is a Retrieval-Augmented Generation (RAG) system built with modular a
 
 ```
 ├── agents/                 # Custom agent logic (retriever, answer)
-├── chunks/                 # Chunked .txt files from documents
-├── clean_text/             # Raw .txt extracted from PDFs
-├── llm/                    # LLM wrappers (Ollama or others)
-├── logs/                   # Embedding metadata, index, logs
-├── raw_data/               # Scraped PDF files
-├── scripts/                # PDF scraper, text processor, embedder
-├── templates/              # Flask HTML templates
-├── app.py                  # Flask web application
-├── requirements.txt        # Python dependencies
+├── chroma_index/          # ChromaDB vector store (downloaded at startup)
+├── llm/                   # LLM wrappers (Ollama or others)
+├── logs/                  # Embedding metadata, logs
+├── scripts/               # Numbered scripts (1-5) for  processing pipeline
+├── templates/             # Flask HTML templates
+├── app.py                 # Flask web application
+├── main.py               # CLI interface application
+├── start.sh              # Startup script for downloading and setting up
+├── requirements.txt      # Python dependencies
+└── .env.example          # Example environment variables file
 ```
 
 ---
@@ -82,31 +85,12 @@ ollama run phi3:mini
 
 ---
 
-## 🔄 Build the Knowledge Base
-
-### A. Scrape PDFs from GBC Website
-```bash
-python scripts/full_gbc_scraper.py
-```
-
-### B. Convert PDFs to Text
-```bash
-python scripts/pdf_to_text.py
-```
-
-### C. Chunk and Embed Documents
-```bash
-python scripts/chunk_texts.py
-python scripts/embed_chunks.py
-```
-
----
-
 ## 💬 Run the Assistant
 
 ### Web Interface (Recommended)
 ```bash
-python app.py
+# This will download necessary files from Dropbox and start the application
+./start.sh
 ```
 Then open http://localhost:10000 in your browser.
 
@@ -128,7 +112,7 @@ python main.py
 ```bash
 python scripts/query.py
 ```
-Standalone CLI to test FAISS retrieval and chunk quality.
+Standalone CLI to test Chromadb retrieval and chunk quality.
 
 ---
 
@@ -140,7 +124,7 @@ Standalone CLI to test FAISS retrieval and chunk quality.
 | Local LLM          | Ollama (`phi3:mini`)                |
 | Cloud LLMs         | OpenAI, Claude, Gemini, Hugging Face |
 | Embedding Model    | `all-MiniLM-L6-v2` via sentence-transformers |
-| Vector Search      | FAISS                                |
+| Vector Search      | ChromaDB                             |
 | PDF Parsing        | pdfplumber                           |
 | Web Scraping       | requests + BeautifulSoup             |
 | Prompt Templates   | Manually written by question type    |
@@ -152,9 +136,7 @@ Standalone CLI to test FAISS retrieval and chunk quality.
 
 | File                     | Description                          |
 |--------------------------|--------------------------------------|
-| `logs/metadata.csv`      | Source PDFs and download info        |
-| `logs/text_metadata.csv` | Word/char count of cleaned files     |
-| `chunk_faiss.index`      | FAISS index for vector search        |
+| `chroma_index/`          | ChromaDB vector store                |
 | `chunk_metadata.pkl`     | Metadata for each chunk              |
 | `chat_logs`              | Chat logs - toggle on llm.py         |
 
