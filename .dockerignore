@@ -1,0 +1,34 @@
+# flyctl launch added from .gitignore
+# Ignore Python environment and cache files
+**/env
+**/.env
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+
+
+# Ignore logs, large files, and binary data
+**/*.log
+**/*.index
+**/*.pkl
+**/*.dylib
+**/*.so
+**/*.node
+
+# Ignore dataset folders
+**/raw_data
+**/clean_text
+**/logs
+**/chat_logs
+**/chroma_index
+**/chunks
+**/pdfs
+**/*.pdf
+**/pages
+
+
+# MacOS cruft
+**/.DS_Store
+fly.toml
