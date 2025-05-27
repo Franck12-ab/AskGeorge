@@ -122,7 +122,6 @@ python main.py
 | File                     | Description                          |
 |--------------------------|--------------------------------------|
 | `chroma_index/`          | ChromaDB vector store                |
-| `chunk_metadata.pkl`     | Metadata for each chunk              |
 | `chat_logs`              | Chat logs - toggle on llm.py         |
 
 ---
