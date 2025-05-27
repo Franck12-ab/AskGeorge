@@ -3,7 +3,7 @@
 
 AskGeorge+ is a Retrieval-Augmented Generation (RAG) system built with LangChain to help George Brown College students get quick, accurate answers to academic and administrative questions. It combines document scraping, semantic search with ChromaDB through LangChain, and natural language answers powered by Google's Gemini model, with a modern Flask web interface.
 
-🌐 **Live Demo**: [askgeorge.onrender.com](https://askgeorge.onrender.com) - Unstable
+🌐 **Live Demo**: [askgeorge.onrender.com](https://askgeorge.onrender.com) - Unstable (Free Tier)
 
 ---
 
