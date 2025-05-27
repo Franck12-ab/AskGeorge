@@ -12,7 +12,7 @@ mkdir -p chroma_index
 
 if [ ! -f "chroma_index/chroma.sqlite3" ]; then
     echo "📥 Downloading prebuilt Chroma index ZIP..."
-    curl -L "https://www.dropbox.com/scl/fi/twth9kyz7qpdxwh3qxplc/chroma_index.zip?rlkey=22ndkbo7aoslblwqakhp4avkb&dl=1" -o chroma_index.zip
+    curl -L "https://www.dropbox.com/scl/fi/eysfd9h67e157ktvzk7zi/chroma_index.zip?rlkey=ldaxhxhx7q4rp6gvdm5kofeuj&st=2eelgagl&dl=1" -o chroma_index.zip
     unzip -q chroma_index.zip -d .
     rm chroma_index.zip
     echo "✅ Chroma index ready."

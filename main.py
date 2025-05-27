@@ -1,27 +1,20 @@
-from agents.optimized_retriever_agent import OptimizedRetrieverAgent
-from agents.smart_answer_agent import SmartAnswerAgent
-from llm.llm import choose_llm, get_response
+from agents.conversational_agent import ConversationalAgent
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def main():
-    print("🚀 Loading optimized AskGeorge+ system...")
-    start_time = time.time()
+    print("🚀 Launching AskGeorge+ (CLI with memory + Gemini)...")
 
-    # Load Chroma-based retriever
-    retriever = OptimizedRetrieverAgent(
-        persist_path="chroma_index",       # ✅ Adjusted to match actual location
-        collection_name="askgeorge"        # ✅ Same name used during embedding
-    )
 
-    # Ask user which LLM to use
-    llm_mode = choose_llm()
-
-    load_time = time.time() - start_time
-    print(f"✅ System loaded in {load_time:.2f} seconds\n")
+    # Initialize the conversational agent with memory + Gemini + LangChain-compatible Chroma
+    agent = ConversationalAgent(persist_path="chroma_index")
 
     while True:
-        question = input("❓ Enter your question (or 'exit'): ").strip()
+        question = input("❓ Enter your question (or type 'exit'): ").strip()
         if question.lower() in ["exit", "quit"]:
+            print("👋 Goodbye!")
             break
         if not question:
             print("⚠️ Please enter a valid question.\n")
@@ -29,35 +22,19 @@ def main():
 
         start_time = time.time()
 
-        # Step 1: Retrieve relevant chunks
-        retrieved = retriever.retrieve(
-            question,
-            rerank=False,
-            llm_callable=lambda prompt: get_response(question, prompt, mode=llm_mode)
-        )
+        # Run the agent
+        result = agent.run(question)
+        answer = result["answer"]
 
-        retrieval_time = time.time() - start_time
-        print(f"\n🔍 Found {len(retrieved)} relevant chunks in {retrieval_time:.2f}s\n")
+        # Show retrieved document info if needed
+        print("🔍 Inspecting retrieved sources (first 5):\n")
+        for i, doc in enumerate(result.get("sources", [])[:5]):
+            print(f"[{i+1}] 🔎 Type: {type(doc)}")
+            print(f"     🧾 Content: {repr(doc)}\n")
 
-        for i, chunk in enumerate(retrieved[:2]):
-            print(f"[{i+1}] 📄 {chunk['source_file']} | 📁 {chunk['category']} | Score: {chunk['distance']:.3f}")
-            print(chunk['text'][:200].replace("\n", " ") + "...\n")
-
-        # Step 2: Generate answer using chosen LLM
-        print("💬 Generating answer...")
-
-        answer_agent = SmartAnswerAgent(
-            llm_callable=lambda prompt: get_response(question, prompt, mode=llm_mode)
-        )
-
-        gen_start = time.time()
-        answer = answer_agent.generate_answer(question, retrieved)
-        gen_time = time.time() - gen_start
-        total_time = time.time() - start_time
-
-        print(f"\n✅ Answer (generated in {gen_time:.2f}s, total: {total_time:.2f}s):\n")
-        print(answer)
-        print("\n" + "="*80 + "\n")
+        print(f"\n✅ Answer:\n{answer}")
+        print(f"\n⏱️ Total time: {round(time.time() - start_time, 2)}s")
+        print("=" * 80 + "\n")
 
 if __name__ == "__main__":
     main()
